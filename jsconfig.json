@@ -1,10 +1,11 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "ES2022",
-    "checkJs": false,
+    "module": "ESNext",
+    "target": "ESNext",
+    "checkJs": true,
     "moduleResolution": "node",
     "resolveJsonModule": true
   },
+  "include": ["**/*.js", "types/global.d.ts"],
   "exclude": ["node_modules"]
 }
