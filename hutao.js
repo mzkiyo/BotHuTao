@@ -1,11 +1,10 @@
 import makeWASocket, {
   useMultiFileAuthState,
   DisconnectReason,
-  Browsers,
-  fetchLatestBaileysVersion
+  Browsers
 } from "@whiskeysockets/baileys";
-import { Boom, boomify, isBoom } from "@hapi/boom";
-import NodeCache from "node-cache";
+import { isBoom } from "@hapi/boom";
+//import NodeCache from "node-cache";
 import { join } from "node:path";
 import pino from "pino";
 import chalk from "chalk";
@@ -16,7 +15,7 @@ import "dotenv/config";
 import handler from "./handler.js";
 import { config } from "./config/config.js";
 
-const msgCache = new NodeCache({ stdTTL: 300, checkperiod: 60 });
+//const msgCache = new NodeCache({ stdTTL: 300, checkperiod: 60 });
 const logger = pino({ level: "fatal" });
 const { state, saveCreds } = await useMultiFileAuthState(
   join(process.cwd(), config.bot.sessionFolder || "auth")
@@ -50,7 +49,8 @@ async function start() {
           config.bot.pairingCode
         );
         print(chalk.bold.yellow("[!]") + "🔗 Pairing code:", code);
-          } catch(e) {
+          } catch(err) {
+            const e = /** @type {Error} */ (err);
             print(chalk.red("[PAIRING FAILED]: ") + "Gagal mendapatkan pairing code. Error: " + e.message);
             process.exit(1)
           }
@@ -70,7 +70,7 @@ async function start() {
           );
           exec(
             "rm -rf " + config.bot.sessionFolder,
-            (error, stdout, stderr) => {
+            (error) => {
               if (error) {
                 print(
                   chalk.red("[SESSION DELETE ERROR]: ") +
@@ -105,7 +105,7 @@ async function start() {
           print(
             "🗑️ Menghapus folder session secara otomatis...\n(you can set auto deletebor manual delete in ./config/config.json"
           );
-          exec("rm -rf " + config.bot.sessionFolder, (err, out, stderr) => {
+          exec("rm -rf " + config.bot.sessionFolder, (err) => {
             if (err) {
               print(
                 chalk.red(">> ") +

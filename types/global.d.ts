@@ -1,4 +1,4 @@
-import { makeWASocket, WASocket, proto, BaileysEventMap } from '@whiskeysockets/baileys';
+import { makeWASocket, WASocket, proto, BaileysEventMap } from "@whiskeysockets/baileys";
 
 // Define tipe custom pesan yang udah di-serialize (kalo ada)
 type CustomSerialize = {
@@ -11,10 +11,21 @@ type CustomSerialize = {
 
 type mBaileys = BaileysEventMap["messages.upsert"]["messages"][number];
 
-// Injection variabel ke scope GLOBAL Node.js/Project
 declare global {
   type M = mBaileys;
   type Sock = ReturnType<typeof makeWASocket>;
   type WASocketInstance = WASocket;
   type WAMessage = proto.IWebMessageInfo & CustomSerialize;
+}
+
+// custom types
+declare global {
+  // == lib/database.js ==
+
+  type UserTanamParams = {
+    /** identifier unik tiap user */
+    id: string;
+    /** data terkait user yang ingin di update */
+    update: { [key: string]: any };
+  };
 }

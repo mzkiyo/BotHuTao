@@ -8,7 +8,9 @@ const config = {
       const res = readFileSync(join(process.cwd(), "config", "config.json"), "utf8");
       if (!res) throw new Error("Gagal membaca config.json");
       return JSON.parse(res)
-    } catch (e) {
+    } catch (err) {
+      
+      const e = /** @type {Error} */ (err);
       console.log(chalk.red("[READ CONFIG]: ") + e.message)
     }
   },
@@ -17,7 +19,10 @@ const config = {
     number: "62xxxxx",
     sessionFolder: "auth",
     pairingCode: "HUTAOOAI",
-    
+    db: {
+      dirname: join(process.cwd(), "lib", "database"),
+      filename: "users"
+    }
   },
   owner: {
     name: "mzkiyo",
