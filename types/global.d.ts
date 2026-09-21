@@ -11,11 +11,14 @@ type CustomSerialize = {
 
 type mBaileys = BaileysEventMap["messages.upsert"]["messages"][number];
 
+type config = {
+  protectOwnerNumber: boolean;
+}
+
+// from packages
 declare global {
   type M = mBaileys;
   type Sock = ReturnType<typeof makeWASocket>;
-  type WASocketInstance = WASocket;
-  type WAMessage = proto.IWebMessageInfo & CustomSerialize;
 }
 
 // custom types
@@ -28,4 +31,18 @@ declare global {
     /** data terkait user yang ingin di update */
     update: { [key: string]: any };
   };
+
+  // == lib/ai-engine.js ==
+  type AIReturns = {
+    /** hasil respon AI */
+    hasil: string;
+    /** proses berfikir AI (klo ada) */
+    thinking: string
+  }
+  type AIParams = {
+    /** set character AI */ 
+    system: string;
+    /** message untuk dijawab AI */
+    message: string
+  }
 }

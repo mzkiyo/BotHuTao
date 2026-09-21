@@ -1,5 +1,6 @@
 {
   "owners": [],
+  "sudos": [],
   "premiums": [],
   "protectOwnerNumber": true,
   "autoDeleteSessionFolder": true

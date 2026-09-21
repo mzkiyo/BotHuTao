@@ -1,0 +1,6 @@
+buat file .env dengan isi minimal gini:
+
+GEMINI_APIKEY=... (apikey gemini lu)
+GROQ_APIKEY=... (apikey groq lu)
+GEMINI_MODEL=... (model gemini)
+GROQ_MODEL=... (model groq)
