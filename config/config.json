@@ -1,7 +1,19 @@
 {
+  "singleOwner": false,
   "owners": [],
   "sudos": [],
   "premiums": [],
+  "mode": "public",
   "protectOwnerNumber": true,
-  "autoDeleteSessionFolder": true
+  "multiPrefix": true,
+  "prefixes": [
+    ".",
+    ",",
+    "?",
+    "!",
+    "/",
+    "#",
+    "*"
+  ],
+  "prefix": "!"
 }

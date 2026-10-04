@@ -45,4 +45,27 @@ declare global {
     /** message untuk dijawab AI */
     message: string
   }
+
+  // == handler/index.js ==
+  type MyPlugin = {
+    name: string;
+    alias: string[];
+    description: string;
+    run: () => Promise<void>;
+  }
+
+  // == lib/formatter.js ==
+  type User = M  & {
+    reply: (text: string) => void;
+    sender: string;
+    senderNumber: string | number;
+    chatId: string;
+    isGroup: boolean;
+    type: "text" | "quoted" | "image" | "video" | "audio" | "contact" | "contactArray" | "location" | "liveLocation" | "unknown";
+    isOwner: boolean;
+    isSudo: boolean;
+    isPremium: boolean;
+    isGroup: boolean;
+    isNewsletter: boolean;
+  }
 }

@@ -1,6 +1,4 @@
-import { readFileSync } from "fs";
-import { join } from "path";
+const text = "home/container/commands/main/menu.cjs";
 
-const res = readFileSync(join("playground.json"), "utf8");
-
-console.log(typeof res)
+const text2 = "menu.cjs";
+console.log(text2.split(".cjs"))

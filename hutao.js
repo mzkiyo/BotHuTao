@@ -1,26 +1,29 @@
 import makeWASocket, {
   useMultiFileAuthState,
   DisconnectReason,
-  Browsers
+  Browsers,
 } from "@whiskeysockets/baileys";
 import { isBoom } from "@hapi/boom";
 //import NodeCache from "node-cache";
+import { rmSync } from "node:fs";
 import { join } from "node:path";
 import pino from "pino";
 import chalk from "chalk";
-import { exec } from "child_process";
+import { Worker } from "node:worker_threads";
 
 import "dotenv/config";
 
-import handler from "./handler.js";
+import handler from "./handler/index.js";
 import { config } from "./config/config.js";
+import { clog } from "./lib/helper.js";
 
+const handlerPath = join(process.cwd(), "handler", "index.js");
+// const handler = new Worker(handlerPath);
 //const msgCache = new NodeCache({ stdTTL: 300, checkperiod: 60 });
 const logger = pino({ level: "fatal" });
 const { state, saveCreds } = await useMultiFileAuthState(
-  join(process.cwd(), config.bot.sessionFolder || "auth")
+  join(process.cwd(), config.bot.sessionFolder || "auth"),
 );
-
 const print = console.log;
 
 async function start() {
@@ -33,7 +36,7 @@ async function start() {
     browser: Browsers.ubuntu("Chrome"),
     maxMsgRetryCount: 5,
     enableRecentMessageCache: true,
-    generateHighQualityLinkPreview: true
+    generateHighQualityLinkPreview: true,
   });
 
   sock.ev.on("connection.update", async ({ connection, lastDisconnect }) => {
@@ -41,20 +44,24 @@ async function start() {
       print(chalk.blue("[CONNECTION]: ") + "connecting...");
       if (!sock.authState.creds.registered) {
         print("Generating pairing code...");
-        setTimeout (async() => {
+        setTimeout(async () => {
           try {
-            print("target: " + config.bot.number)
-        const code = await sock.requestPairingCode(
-          config.bot.number,
-          config.bot.pairingCode
-        );
-        print(chalk.bold.yellow("[!]") + "🔗 Pairing code:", code);
-          } catch(err) {
+            print("target: " + config.bot.number);
+            const code = await sock.requestPairingCode(
+              config.bot.number,
+              config.bot.pairingCode,
+            );
+            print(chalk.bold.yellow("[!]") + "🔗 Pairing code:", code);
+          } catch (err) {
             const e = /** @type {Error} */ (err);
-            print(chalk.red("[PAIRING FAILED]: ") + "Gagal mendapatkan pairing code. Error: " + e.message);
-            process.exit(1)
+            print(
+              chalk.red("[PAIRING FAILED]: ") +
+                "Gagal mendapatkan pairing code. Error: " +
+                e.message,
+            );
+            process.exit(1);
           }
-        }, 3000)
+        }, 3000);
       }
     } else if (connection === "close") {
       const error = lastDisconnect?.error;
@@ -64,74 +71,62 @@ async function start() {
 
       if (statusCode === DisconnectReason.loggedOut) {
         print("❌ Koneksi terputus");
-        if (config.settings.autoDeleteSessionFolder) {
+        if (config.bot.autoDeleteSessionFolder) {
           print(
-            "🗑️ Deleting session folder... \n(you can set auto delete or manual delete on ./config/config.json)"
+            "🗑️ Deleting session folder... \n(you can set auto delete or manual delete on ./config/config.js)",
           );
-          exec(
-            "rm -rf " + config.bot.sessionFolder,
-            (error) => {
-              if (error) {
-                print(
-                  chalk.red("[SESSION DELETE ERROR]: ") +
-                    error.message.toString()
-                );
-                return;
-              }
-              print("Session deleted. Reconnecting...");
-              start();
-            }
-          );
+          rmSync(join(process.cwd(), config.bot.sessionFolder), {
+            recursive: true,
+            force: true,
+          });
+          print(">> Done Deleting Session Folder");
+          print(">> Restarting...");
+          await start();
         } else {
           print(
-            chalk.bold.yellow(">> ") + "Hapus folder session dan coba lagi"
+            chalk.bold.yellow(">> ") + "Hapus folder session dan coba lagi",
           );
         }
       } else if (statusCode === DisconnectReason.restartRequired) {
         print(chalk.bold.yellow("[!] ") + "Restart required. Restarting...");
-        start();
+        await start();
       } else if (
         statusCode === DisconnectReason.connectionLost ||
         statusCode === DisconnectReason.timedOut
       ) {
         print(
           chalk.bold.yellow("[!] ") +
-            "Koneksi hilang/Timed out. Mencoba menghubungkan kembali..."
+            "Koneksi hilang/Timed out. Mencoba menghubungkan kembali...",
         );
-        start();
+        await start();
       } else if (statusCode === DisconnectReason.badSession) {
         print("Bad session. Session corrupt");
-        if (config.settings.autoDeleteSessionFolder) {
+        if (config.bot.autoDeleteSessionFolder) {
           print(
-            "🗑️ Menghapus folder session secara otomatis...\n(you can set auto deletebor manual delete in ./config/config.json"
+            "🗑️ Menghapus folder session secara otomatis...\n(you can set auto deletebor manual delete in ./config/config.json",
           );
-          exec("rm -rf " + config.bot.sessionFolder, (err) => {
-            if (err) {
-              print(
-                chalk.red(">> ") +
-                  "Error saat menghapus folder session " +
-                  error?.message.toString()
-              );
-              return;
-            }
-            print("berhasil menghapus folder session. Restarting...");
-            start();
+          rmSync(join(process.cwd(), config.bot.sessionFolder), {
+            recursive: true,
+            force: true,
           });
+          print(">> Done Deleting Session Folder");
+          print(">> Restarting...");
+          await start();
         } else {
           print(
-            "Folder session rusak/corrupt. Hapus folder session dan coba lagi"
+            "Folder session rusak/corrupt. Hapus folder session dan coba lagi",
           );
         }
       }
     } else if (connection === "open") {
       print(chalk.green("[CONNECTED]: ") + "✅ Bot berhasil tersambung");
-      sock.sendMessage(`${config.owner.number}@s.whatsapp.net`, {
-        text: `${config.bot.name} Aktif! Siap menerima perintah`
-      });
+      // sock.sendMessage(`${config.owner.number}@s.whatsapp.net`, {
+      //   text: `${config.bot.name} Aktif! Siap menerima perintah`,
+      // });
     } else {
       print(
         chalk.yellow("[CONNECTION]: ") +
-          "Koneksi tidak terdeteksi. Silahkan mulai ulang"
+          "Koneksi tidak terdeteksi. Silahkan mulai ulang",
       );
     }
   });
@@ -139,7 +134,7 @@ async function start() {
   sock.ev.on("creds.update", saveCreds);
 
   sock.ev.on("messages.upsert", async ({ messages }) => {
-    const m = messages[0];
+    const m = /** @type {User} */ (messages[0]);
     if (!m.message) return;
     await handler(m, sock);
   });
