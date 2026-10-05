@@ -3,6 +3,9 @@ auth_info/
 deploy.bat
 .vscode
 .env
+auth
+.*
+.cache
 .npm/
 tmp_*
 *.webp
